@@ -1,14 +1,24 @@
+
 describe("Home screen tests", () => {
   beforeEach("Open home screen", () => {
+
     cy.visit("/");
   });
 
-  it("The cocktails list should be visible", () => {
-    cy.get(".logo").should("contain", "MIXdrinks");
-    cy.get(".cocktails-body__list")
-      .find(".list__item")
-      .first()
-      .should("contain.text", "Cкритна леді");
+  it("The cocktails list should be visible", async () => {
+    cy.request({
+      method: 'GET',
+      url: 'https://whale-app-iz3av.ondigitalocean.app/v2/search/cocktails?page=0',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then((cocktailsList) => {
+      const cocktails = cocktailsList.body.cocktails
+      cy.get('.cocktails-body__list .list__item').each(item => {
+        const itemText = item.text().trim()
+        expect(itemText).to.contain(cocktails[item.index()].name)
+      })
+    })
   });
 
   it("Applying sorting", () => {
@@ -23,7 +33,7 @@ describe("Home screen tests", () => {
     cy.url().should("contain", "?sort=biggest-rate");
   });
 
-  it.only("Applying filter", () => {
+  it("Applying filter", () => {
     cy.intercept({
       method: "GET",
       url: "/v2/search/cocktails*",
